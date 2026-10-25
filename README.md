@@ -1,4 +1,4 @@
-<p align="center"><a href="https://jinawinwin.github.io/SEC_Starbucks/"><img src="assets/dashboard-badge.svg" alt="🔗 대시보드 바로가기" width="320"></a></p>
+<p align="center"><a href="https://jinawinwin.github.io/SEC_Starbucks/"><img src="assets/starbucks-logo.png" width="90" alt="Starbucks 대시보드 바로가기"></a><br><a href="https://jinawinwin.github.io/SEC_Starbucks/"><strong>🔗 대시보드 바로가기</strong></a></p>
 
 # Starbucks SEC 재무 분석 대시보드
 
