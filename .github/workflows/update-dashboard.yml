@@ -1,0 +1,60 @@
+name: Update Starbucks SEC dashboard
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "data/financials.json"
+      - "data/companyfacts.json"
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 5 * *"
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: starbucks-dashboard
+  cancel-in-progress: false
+jobs:
+  refresh:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Check SEC contact configuration
+        env:
+          SEC_CONTACT_EMAIL: ${{ secrets.SEC_CONTACT_EMAIL }}
+        run: |
+          if [ -z "$SEC_CONTACT_EMAIL" ]; then
+            echo "::error title=SEC contact missing::Add SEC_CONTACT_EMAIL under Settings > Secrets and variables > Actions before refreshing data."
+            exit 1
+          fi
+      - name: Refresh Starbucks SEC data
+        env:
+          SEC_CONTACT_EMAIL: ${{ secrets.SEC_CONTACT_EMAIL }}
+        run: python scripts/update_data.py
+      - name: Commit refreshed data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/financials.json data/companyfacts.json
+          git diff --cached --quiet || git commit -m "chore: refresh SEC financial data"
+          git push
+  deploy:
+    needs: refresh
+    if: always() && (needs.refresh.result == 'success' || needs.refresh.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - uses: actions/deploy-pages@v4
